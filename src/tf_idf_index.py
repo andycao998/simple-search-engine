@@ -5,19 +5,12 @@ import math
 from documents import TransformedDocument
 from index import BaseIndex
 
-
 def count_terms(term_list: list[str]) -> collections.Counter:
-    # print(collections.Counter(term_list))
     return collections.Counter(term_list)
-    # term_counts_dict = collections.defaultdict(int)
-    # for term in term_list:
-    #     term_counts_dict[term] += 1
-    # return term_counts_dict
-
 
 class TfIdfIndex(BaseIndex):
     def __init__(self):
-        # mapping of terms to the number of documents they occur in
+        # Mapping of terms to the number of documents they occur in
         self.doc_counts = collections.Counter()
         self.id_to_terms_counts: dict[str, collections.Counter] = dict()
 
@@ -41,24 +34,17 @@ class TfIdfIndex(BaseIndex):
         return sum([self.tf_idf(term, doc_id) for term in term_list])
 
     def search(self, processed_query: list[str], number_of_results: int) -> list[str]:
-        # mapping from doc_ids to term counts in the corresponding document
-        # straight term count relevance
+        # Mapping from doc_ids to term counts in the corresponding document
+        # Straight term count relevance
         scores = dict()
-        # id_to_terms_combined_counts = collections.defaultdict(int)
+
         for doc_id in self.id_to_terms_counts.keys():
             score = self.combine_term_scores(processed_query, doc_id)
             scores[doc_id] = score
-        # print(scores)
+
         return sorted(self.id_to_terms_counts.keys(), key=scores.get, reverse=True)[:number_of_results]
 
-        # query_terms_set = set(processed_query)
-        # results = []
-        # for doc_id, doc_term_set in self.id_to_terms_counts.items():
-        #     if query_terms_set.issubset(doc_term_set):
-        #         results.append(doc_id)
-        # TODO: Make results into a class.
-        # return results
-
+    # Unused
     def write(self, path: str):
         with open(path, 'w') as fp:
             fp.write(json.dumps({

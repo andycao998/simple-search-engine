@@ -3,7 +3,6 @@ from collections import defaultdict
 
 from query_process import QueryProcess
 
-
 def read_queries(path: str) -> dict[str, str]:
     """
     Read queries
@@ -17,14 +16,12 @@ def read_queries(path: str) -> dict[str, str]:
             queries[record['query_id']] = record['text']
     return queries
 
-
 def read_eval_data(queries_path: str, eval_data_path: str) -> dict[str, set[str]]:
     """
     Read evaluation data
     :param queries_path:
     :param eval_data_path:
     :return: Dictionary mapping a query to expected doc_ids
-
 
     Example:
     For eval data
@@ -49,7 +46,6 @@ def read_eval_data(queries_path: str, eval_data_path: str) -> dict[str, set[str]
             doc_id = record['doc_id']
             eval_data[queries[query_id]].add(doc_id)  # {'1102431': {2026790}}
     return eval_data
-
 
 def evaluate(query_process: QueryProcess, eval_data: dict[str, set[str]]) -> float:
     score = 0

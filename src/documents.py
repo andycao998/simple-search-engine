@@ -1,17 +1,15 @@
 import json
 import typing
 
-
 class Document(typing.NamedTuple):
     doc_id: str
     text: str
-
 
 class TransformedDocument(typing.NamedTuple):
     doc_id: str
     terms: list[str]
 
-
+# Interface
 class DocumentStore:
     def add_document(self, doc: Document):
         pass
@@ -25,7 +23,7 @@ class DocumentStore:
     def write(self, path: str):
         pass
 
-
+# List implementation
 class ListDocumentStore(DocumentStore):
     def __init__(self, docs: typing.Optional[list[Document]]):
         if docs is None:
@@ -36,7 +34,6 @@ class ListDocumentStore(DocumentStore):
     def add_document(self, doc: Document):
         self.docs.append(doc)
 
-    # typing.Optional[Document] is the same as Document | None
     def get_doc_by_id(self, doc_id: str) -> typing.Optional[Document]:
         for d in self.docs:
             if d.doc_id == doc_id:
@@ -59,11 +56,8 @@ class ListDocumentStore(DocumentStore):
                 record = json.loads(line)
                 docs.append(Document(doc_id=record['doc_id'], text=record['text']))
         return ListDocumentStore(docs)
-        # return ListDocumentStore([
-        #     Document(**json.loads(line)) for line in fp
-        # ])
 
-
+# Dictionary implementation
 class DictDocumentStore(DocumentStore):
     def __init__(self, docs: typing.Optional[dict]):
         if docs is None:
@@ -91,6 +85,6 @@ class DictDocumentStore(DocumentStore):
         with open(path, 'r') as fp:
             for line in fp:
                 record = json.loads(line)
-                docs[record['doc_id']] = Document(doc_id=record['doc_id'], text=record['text'])
-                # docs.append(Document(doc_id=record['doc_id'], text=record['text']))
+                docs[record['doc_id']] = Document(doc_id=record['doc_id'], text=record['text']) # Map document id to entire document
+
         return DictDocumentStore(docs)
