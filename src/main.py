@@ -34,7 +34,7 @@ if __name__ == '__main__':
     search_button = tkinter.Button(root, text="Search", command=lambda: perform_search(query_entry.get(), doc_store, index))
     search_button.pack()
 
-    result_area = scrolledtext.ScrolledText(root, width=60, height=20)
+    result_area = scrolledtext.ScrolledText(root, width=120, height=40)
     result_area.pack()
     
     root.mainloop()

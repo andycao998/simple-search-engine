@@ -68,30 +68,32 @@ class TfIdfInvertedIndexPhrase(BaseIndex):
                 # All terms must be present in a document to count
                 set_of_docs = set()
                 break
+        
+        # valid_docs = set()
+        # for doc in set_of_docs:
+        #     phrase_in_doc = True
+        #     for phrase_list in phrase_dict.values():  # Loop if there are multiple separate phrases in query
+        #         for i, term in enumerate(phrase_list):  # Loop through terms in each phrase list
+        #             # Loop for each term's positions in each document
+        #             for j, term_occurrence in enumerate(self.term_to_doc_id_tf_scores[term][doc]['indexes']):
+        #                 phrase_pos = self.term_to_doc_id_tf_scores[term][doc]['indexes'][j]
+        #                 if i < len(phrase_list) - 1:  # Check if in bounds when looking at next term position
+        #                     if phrase_pos + 1 not in self.term_to_doc_id_tf_scores[phrase_list[i + 1]][doc]['indexes']:
+        #                         # Move on to the term's next position in doc if it is not the last in the array
+        #                         if j != len(self.term_to_doc_id_tf_scores[term][doc]['indexes']) - 1:  # j is index pos
+        #                             continue
+        #                         phrase_in_doc = False  # Exit everything once one term fails
+        #                         break
+        #                     else:
+        #                         break
+        #             if phrase_in_doc is False:
+        #                 break
+        #         if phrase_in_doc is False:
+        #             break
+        #     if phrase_in_doc:
+        #         valid_docs.add(doc)
 
-        valid_docs = set()
-        for doc in set_of_docs:
-            phrase_in_doc = True
-            for phrase_list in phrase_dict.values():  # Loop if there are multiple separate phrases in query
-                for i, term in enumerate(phrase_list):  # Loop through terms in each phrase list
-                    # Loop for each term's positions in each document
-                    for j, term_occurrence in enumerate(self.term_to_doc_id_tf_scores[term][doc]['indexes']):
-                        phrase_pos = self.term_to_doc_id_tf_scores[term][doc]['indexes'][j]
-                        if i < len(phrase_list) - 1:  # Check if in bounds when looking at next term position
-                            if phrase_pos + 1 not in self.term_to_doc_id_tf_scores[phrase_list[i + 1]][doc]['indexes']:
-                                # Move on to the term's next position in doc if it is not the last in the array
-                                if j != len(self.term_to_doc_id_tf_scores[term][doc]['indexes']) - 1:  # j is index pos
-                                    continue
-                                phrase_in_doc = False  # Exit everything once one term fails
-                                break
-                            else:
-                                break
-                    if phrase_in_doc is False:
-                        break
-                if phrase_in_doc is False:
-                    break
-            if phrase_in_doc:
-                valid_docs.add(doc)
+        valid_docs = self.add_valid_docs(set_of_docs, phrase_dict)
 
         set_of_docs = valid_docs
         print(set_of_docs)
@@ -102,6 +104,59 @@ class TfIdfInvertedIndexPhrase(BaseIndex):
             scores[doc_id] = score
         print(scores)
         return sorted(scores.keys(), key=scores.get, reverse=True)[:number_of_results]
+
+    def add_valid_docs(self, set_of_docs, phrase_dict):
+        valid_docs = set()
+
+        for doc in set_of_docs:
+            phrase_in_doc = self.check_all_phrases_in_doc(phrase_dict, doc)
+            if phrase_in_doc:
+                valid_docs.add(doc)
+
+        return valid_docs
+
+    def check_all_phrases_in_doc(self, phrase_dict, doc):
+        for phrase_list in phrase_dict.values():  # Loop if there are multiple separate phrases in query
+            phrase_in_doc = self.check_all_terms_in_phrase(phrase_list, doc)
+
+            if phrase_in_doc is False: # Any phrase in query fails, doc is invalid
+                return False
+        
+        return True
+
+    def check_all_terms_in_phrase(self, phrase_list, doc):
+        for i, term in enumerate(phrase_list):  # Loop through terms in each phrase list
+            phrase_in_doc = self.check_term_in_doc(phrase_list, i, term, doc)
+
+            if phrase_in_doc is False: # Any term in phrase fails, doc is invalid
+                return False
+
+        return True 
+
+    def check_term_in_doc(self, phrase_list, i, term, doc):
+        for j, _ in enumerate(self.term_to_doc_id_tf_scores[term][doc]['indexes']):
+            phrase_pos = self.term_to_doc_id_tf_scores[term][doc]['indexes'][j]
+
+            if i < len(phrase_list) - 1:  # Check if in bounds when looking at next term position
+                phrase_in_doc, continue_loop = self.check_next_term(phrase_pos, phrase_list, i, j, term, doc)
+
+                if continue_loop: # Continue looking in next position of the term
+                    continue
+                
+                return phrase_in_doc # Doc is not valid if end reached or valid if next term in phrase was found
+        
+        return True # Every term in phrase was found
+        
+    def check_next_term(self, phrase_pos, phrase_list, i, j, term, doc):
+        # Phrases must be listed sequentially: check next position for next term in phrase for match
+        if phrase_pos + 1 not in self.term_to_doc_id_tf_scores[phrase_list[i + 1]][doc]['indexes']:
+            # Move onto the term's next position in doc if it is not the last in the array
+            if j != len(self.term_to_doc_id_tf_scores[term][doc]['indexes']) - 1:  # j is index pos
+                return True, True # Next term was not found but not end of doc, continue
+
+            return False, False # Next term was not found and end of doc, exit
+
+        return True, False # Next term in phrase was found
 
     # Unused
     def write(self, path: str):
