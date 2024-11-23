@@ -16,7 +16,7 @@ def index_docs():
     doc_store = None
     index = None
     # Default option of phrase-enabled searching [Tf_Idf, Tf_Idf_Inverted, Tf_Idf_Inverted_Phrase] <- swap with any
-    doc_store, index = indexing_process(os.path.abspath('../pythonProject/resources/msmarco_passage_dev_rel_docs.json'), 'Tf_Idf_Inverted_Phrase')
+    doc_store, index = indexing_process(os.path.abspath('../resources/msmarco_passage_dev_rel_docs.json'), 'Tf_Idf_Inverted_Phrase')
     return doc_store, index
 
 if __name__ == '__main__':
